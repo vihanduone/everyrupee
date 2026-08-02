@@ -1,5 +1,5 @@
 from datetime import datetime
-from database import supabase
+from db.client import supabase
 
 
 def get_or_create_user(beta_user: dict):
