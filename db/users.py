@@ -2,14 +2,13 @@ from datetime import datetime
 from db.client import supabase
 
 
+# ---------------- GET USER ----------------
 def get_user_from_db(whatsapp_id: str):
     """
-    Fetch an existing user from database using WhatsApp ID.
-    Returns user object if found, otherwise None.
+    Fetch user by WhatsApp ID
     """
 
     if not whatsapp_id:
-        print("❌ WhatsApp ID missing")
         return None
 
     try:
@@ -20,49 +19,42 @@ def get_user_from_db(whatsapp_id: str):
             .execute()
         )
 
-        if res.data:
-            print(f"✅ User found: {whatsapp_id}")
-            return res.data[0]
-
-        print(f"⚠️ No user found: {whatsapp_id}")
-        return None
+        return res.data[0] if res.data else None
 
     except Exception as e:
-        print("❌ User fetch error:", str(e))
+        print("❌ Get user error:", str(e))
         return None
 
 
 
-def get_or_create_user(beta_user: dict):
+# ---------------- GET OR CREATE ----------------
+# Compatible with your existing webhook
+def get_or_create_user(whatsapp_id: str):
     """
-    Get existing user by WhatsApp ID.
-    If user does not exist, create a new user.
+    Returns:
+    user, False  -> user exists
+    None, True   -> user needs approval
     """
 
-    whatsapp_id = beta_user.get("whatsapp_id")
+    user = get_user_from_db(whatsapp_id)
 
-    if not whatsapp_id:
-        print("❌ WhatsApp ID missing")
-        return None
+    if user:
+        print(f"✅ Existing approved user: {whatsapp_id}")
+        return user, False
 
-    # Check existing user
-    existing_user = get_user_from_db(whatsapp_id)
-
-    if existing_user:
-        return existing_user
-
-    # Create new user
-    return create_user_from_beta(beta_user)
+    print(f"⚠️ User waiting for approval: {whatsapp_id}")
+    return None, True
 
 
 
+# ---------------- CREATE USER AFTER APPROVAL ----------------
 def create_user_from_beta(beta_user: dict):
     """
-    Create user safely without requiring optional columns.
+    Create approved user
     """
 
     data = {
-        "whatsapp_id": beta_user.get("whatsapp_id"),
+        "whatsapp_id": beta_user["whatsapp_id"],
         "name": beta_user.get("name"),
         "email": beta_user.get("email"),
         "onboarding_step": "active",
@@ -77,39 +69,41 @@ def create_user_from_beta(beta_user: dict):
         )
 
         print(
-            f"✅ User created successfully: {beta_user.get('whatsapp_id')}"
+            f"✅ User created: {beta_user['whatsapp_id']}"
         )
 
         return res.data[0] if res.data else None
 
-
     except Exception as e:
-        print("⚠️ Full user creation failed:", str(e))
-
-        # Fallback: insert only required columns
-        try:
-            minimal = {
-                "whatsapp_id": beta_user.get("whatsapp_id"),
-                "name": beta_user.get("name")
-            }
-
-            res = (
-                supabase.table("users")
-                .insert(minimal)
-                .execute()
-            )
-
-            print(
-                "⚠️ Minimal user created without optional columns"
-            )
-
-            return res.data[0] if res.data else None
+        print("❌ User creation error:", str(e))
+        return None
 
 
-        except Exception as e2:
-            print(
-                "❌ Minimal user creation also failed:",
-                str(e2)
-            )
 
-            return None
+# ---------------- UPDATE NAME ----------------
+def update_user_name(whatsapp_id: str, name: str):
+
+    supabase.table("users")\
+        .update({"name": name})\
+        .eq("whatsapp_id", whatsapp_id)\
+        .execute()
+
+
+
+# ---------------- UPDATE OCCUPATION ----------------
+def update_user_occupation(whatsapp_id: str, occupation: str):
+
+    supabase.table("users")\
+        .update({"occupation": occupation})\
+        .eq("whatsapp_id", whatsapp_id)\
+        .execute()
+
+
+
+# ---------------- SAVE FEEDBACK ----------------
+def put_feedback(whatsapp_id: str, feedback_text: str):
+
+    supabase.table("users")\
+        .update({"feedbacks": feedback_text})\
+        .eq("whatsapp_id", whatsapp_id)\
+        .execute()
