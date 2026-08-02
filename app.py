@@ -133,9 +133,23 @@ def send_reminder(data: dict):
 
 @app.post("/send-inactivity-reminders")
 def trigger_inactivity():
-    print("started")
+    print("🚀 Inactivity reminder endpoint called", flush=True)
+
     from agent.reminder import send_inactivity_reminder
-    return send_inactivity_reminder()
+
+    try:
+        result = send_inactivity_reminder()
+
+        print("✅ Function completed:", result, flush=True)
+
+        return result
+
+    except Exception as e:
+        print("❌ ERROR:", str(e), flush=True)
+        return {
+            "status": "error",
+            "message": str(e)
+        }
 
 @app.post("/send-weekly-reports")
 
