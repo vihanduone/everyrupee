@@ -1,0 +1,13 @@
+groq
+fastapi
+uvicorn
+twilio
+python-multipart
+python-dotenv
+supabase
+pandas
+openpyxl
+resend
+pandas
+resend
+requests

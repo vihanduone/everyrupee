@@ -1,0 +1,22 @@
+[
+  {
+    "user_id": "whatsapp:+94760001217",
+    "name": null,
+    "email": "vihandu.wan@gmail.com",
+    "expenses": [
+      {
+        "amount": 100,
+        "category": null
+      },
+      {
+        "amount": 1000,
+        "category": "transport"
+      },
+      {
+        "amount": 500,
+        "category": "food"
+      }
+    ],
+    "pending": null
+  }
+]
