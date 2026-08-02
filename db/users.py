@@ -2,6 +2,37 @@ from datetime import datetime
 from db.client import supabase
 
 
+def get_user_from_db(whatsapp_id: str):
+    """
+    Fetch an existing user from database using WhatsApp ID.
+    Returns user object if found, otherwise None.
+    """
+
+    if not whatsapp_id:
+        print("❌ WhatsApp ID missing")
+        return None
+
+    try:
+        res = (
+            supabase.table("users")
+            .select("*")
+            .eq("whatsapp_id", whatsapp_id)
+            .execute()
+        )
+
+        if res.data:
+            print(f"✅ User found: {whatsapp_id}")
+            return res.data[0]
+
+        print(f"⚠️ No user found: {whatsapp_id}")
+        return None
+
+    except Exception as e:
+        print("❌ User fetch error:", str(e))
+        return None
+
+
+
 def get_or_create_user(beta_user: dict):
     """
     Get existing user by WhatsApp ID.
@@ -14,23 +45,13 @@ def get_or_create_user(beta_user: dict):
         print("❌ WhatsApp ID missing")
         return None
 
-    try:
-        # Check if user already exists
-        res = (
-            supabase.table("users")
-            .select("*")
-            .eq("whatsapp_id", whatsapp_id)
-            .execute()
-        )
+    # Check existing user
+    existing_user = get_user_from_db(whatsapp_id)
 
-        if res.data:
-            print(f"✅ Existing user found: {whatsapp_id}")
-            return res.data[0]
+    if existing_user:
+        return existing_user
 
-    except Exception as e:
-        print("User lookup error:", str(e))
-
-    # User does not exist -> create new user
+    # Create new user
     return create_user_from_beta(beta_user)
 
 
@@ -63,9 +84,9 @@ def create_user_from_beta(beta_user: dict):
 
 
     except Exception as e:
-        print("User creation error:", str(e))
+        print("⚠️ Full user creation failed:", str(e))
 
-        # Fallback if email or new columns do not exist
+        # Fallback: insert only required columns
         try:
             minimal = {
                 "whatsapp_id": beta_user.get("whatsapp_id"),
@@ -79,7 +100,7 @@ def create_user_from_beta(beta_user: dict):
             )
 
             print(
-                "⚠️ Minimal user created WITHOUT optional columns"
+                "⚠️ Minimal user created without optional columns"
             )
 
             return res.data[0] if res.data else None
