@@ -133,6 +133,7 @@ def send_reminder(data: dict):
 
 @app.post("/send-inactivity-reminders")
 def trigger_inactivity():
+    print("started")
     from agent.reminder import send_inactivity_reminder
     return send_inactivity_reminder()
 
