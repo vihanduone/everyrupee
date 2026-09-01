@@ -6,7 +6,7 @@ import resend
 
 load_dotenv() 
 
-MODEL_NAME = "llama-3.3-70b-versatile"
+MODEL_NAME = "openai/gpt-oss-120b"
 
 api_key = os.getenv("GROQ_API_KEY")
 
